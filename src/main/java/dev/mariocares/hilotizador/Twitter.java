@@ -17,7 +17,7 @@ import java.util.List;
 public class Twitter {
     private static final String api_key = "";
     private static final String api_key_secret = "";
-    private static final String token_bearer = "%2B5RRGaPTYmdYV4Q%3Dgjkzp2Md67F1hj4qildwST3K95oGj2kTYgmxT0FKN48oVR5OBm";
+    private static final String token_bearer = "%%";
     private static final String token = "-";
     private static final String token_secret = "";
     private static final String url = "https://twitter.com/";
