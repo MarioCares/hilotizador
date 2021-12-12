@@ -1,4 +1,4 @@
-package dev.mariocares.hilotizador;
+package dev.mariocares.hilotizador.models;
 
 public class Usuario {
     public String nombre, avatar, nickname, descripcion;

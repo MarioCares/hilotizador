@@ -1,9 +1,12 @@
 package dev.mariocares.hilotizador;
 
+import dev.mariocares.hilotizador.models.Tuit;
+import dev.mariocares.hilotizador.models.Url;
+import dev.mariocares.hilotizador.models.Usuario;
 import io.github.redouane59.twitter.TwitterClient;
 import io.github.redouane59.twitter.dto.tweet.Attachments;
 import io.github.redouane59.twitter.dto.tweet.Tweet;
-import io.github.redouane59.twitter.dto.tweet.entities.MediaEntity;
+import io.github.redouane59.twitter.dto.tweet.entities.*;
 import io.github.redouane59.twitter.dto.user.User;
 import io.github.redouane59.twitter.signature.TwitterCredentials;
 
@@ -14,9 +17,10 @@ import java.util.List;
 public class Twitter {
     private static final String api_key = "";
     private static final String api_key_secret = "";
-    private static final String token_bearer = "";
-    private static final String token = "";
+    private static final String token_bearer = "%2B5RRGaPTYmdYV4Q%3Dgjkzp2Md67F1hj4qildwST3K95oGj2kTYgmxT0FKN48oVR5OBm";
+    private static final String token = "-";
     private static final String token_secret = "";
+    private static final String url = "https://twitter.com/";
 
     private final String id;
 
@@ -40,25 +44,20 @@ public class Twitter {
                 u.getName(),
                 u.getFollowersCount(),
                 u.getTweetCount(),
-                buscarLinks(buscarUsuarios(buscarHash(u.getDescription())))
+                u.getDescription()
         );
     }
 
     public List<Tuit> hilo(){
         List<Tuit> tuits = new ArrayList<>();
         armarHilo(this.id).forEach(tweet -> {
-            tuits.add(
-                    new Tuit(
-                            buscarLinks(
-                                    buscarHash(
-                                            buscarUsuarios(
-                                                    limpiarTuit(tweet.getText(), (tweet.getMedia()) != null)
-                                            )
-                                    )
-                            ),
-                            media(tweet.getMedia())
-                    )
-            );
+            //attachments(tweet.getAttachments());
+            //entities(tweet.getEntities());
+            String texto = tweet.getText();
+            texto = generarHash(texto, tweet.getEntities().getHashtags());
+            texto = generarMencion(texto, tweet.getEntities().getUserMentions());
+            texto = limpiarLinks(texto, tweet.getEntities().getUrls());
+            tuits.add( new Tuit( texto, media(tweet.getMedia()), url(tweet.getEntities().getUrls()) ) );
         });
         return tuits;
     }
@@ -75,31 +74,41 @@ public class Twitter {
         return tuits;
     }
 
-    private String limpiarTuit(String texto, boolean media){
-        /* Esto es medio rancio... jaja. Twitter siempre añade links de media o páginas al final del tuit.
-        Si existe un link y una imagen, la imagen siempre siempre queda al final.
-        Si existe un link en "medio" de un tuit, hay que revisarlo distinto
-        Además, al menos hasta ahora... siempre son 23 caractéres... así que se puede "cortar" o contar desde atrás.
-        */
-        if(media){
-            // ENTONCES ELIMINO EL ULTIMO LINK (23 caracteres)
-            return texto.substring(0, (texto.length() - 23));
-        }
-        return texto;
-    }
-
     private List<String> media(List<? extends MediaEntity> medias){
         List<String> media = new ArrayList<>();
         if(medias != null){
             medias.forEach(tmp -> {
                 if(tmp.getType().equals("photo")){
                     media.add(tmp.getMediaUrl());
+                } else {
+                    System.out.println(tmp.getType());
+                    System.out.println(tmp.getMediaUrl());
+                    System.out.println(tmp.getDisplayUrl());
+                    System.out.println(tmp.getExpandedUrl());
+                    System.out.println(tmp.getUrl());
                 }
             });
         } else {
             //System.out.println("No tengo imagen");
         }
         return media;
+    }
+
+    private void entities(Entities entities){
+        System.out.println("!------Entities---------");
+        if (entities.getSymbols() != null) {
+            System.out.println("-- symbols --");
+            entities.getUrls().forEach(symbol -> {
+                System.out.println(symbol.getDescription());
+                System.out.println(symbol.getUnwoundedUrl());
+                System.out.println(symbol.getTitle());
+                System.out.println(symbol.getUrl());
+                System.out.println(symbol.getExpandedUrl());
+                System.out.println(symbol.getDisplayUrl());
+            });
+            System.out.println("-- symbols --");
+        }
+        System.out.println("----Entities----!");
     }
 
     private void attachments(Attachments attachments){
@@ -110,60 +119,57 @@ public class Twitter {
         }
     }
 
-    private String buscarUsuarios(String texto){
-        List<String> salida = new ArrayList<>();
-        if(texto.contains("@")){
-            String[] split = texto.split(" ");
-            for (String parte : split) {
-                if(parte.startsWith("@")){
-                    salida.add("<a href=\"https://twitter.com/" +
-                            parte.replace("@", "") +
-                            "\" target=\"_blank\">" + parte + "</a>");
-                } else {
-                    salida.add(parte);
-                }
+    private String generarHash(String texto, List<? extends HashtagEntity> hashs){
+        if(hashs != null){
+            for (HashtagEntity hash : hashs) {
+                texto = texto.replace(
+                    ("#" + hash.getText()),
+                    "<a href=\"" + url + "search?q=%23" + hash.getText() + "\" target=\"_blank\">" +
+                        "#" + hash.getText() + "</a>"
+                );
             }
-            return String.join(" ", salida);
-        } else {
-            return texto;
         }
+        return texto;
     }
 
-    private String buscarHash(String texto){
-        List<String> salida = new ArrayList<>();
-        if(texto.contains("#")){
-            String[] split = texto.split(" ");
-            for (String parte : split) {
-                if(parte.startsWith("#")){
-                    salida.add("<a href=\"https://twitter.com/search?q=%23" +
-                            parte.replace("#", "") +
-                            "\" target=\"_blank\">" + parte + "</a>");
-                } else {
-                    salida.add(parte);
-                }
+    private String generarMencion(String texto, List<? extends UserMentionEntity> menciones){
+        if(menciones != null){
+            for (UserMentionEntity mencion : menciones) {
+                texto = texto.replace(
+                    ("@" + mencion.getText()),
+                    "<a href=\"" + url + mencion.getText() + "\" target=\"_blank\">" +
+                        "@" + mencion.getText() + "</a>"
+                );
             }
-            return String.join(" ", salida);
-        } else {
-            return texto;
         }
+        return texto;
     }
 
-    private String buscarLinks(String texto){
-        List<String> salida = new ArrayList<>();
-        if(texto.contains("https://t.co/")){
-            String[] split = texto.split(" ");
-            for (String parte : split) {
-                if(parte.startsWith("https://t.co/")){
-                    salida.add("<a href=\"https://t.co/" +
-                            parte.replace("https://t.co/", "") +
-                            "\" target=\"_blank\">" + parte + "</a>");
-                } else {
-                    salida.add(parte);
+    private List<Url> url(List<? extends UrlEntity> links){
+        List<Url> urls = new ArrayList<>();
+        if(links != null){
+            for (UrlEntity link : links) {
+                // SI SOY PÁGINA ENTONCES TENGO TITULO
+                if(link.getTitle() != null){
+                    urls.add(new Url(link.getDescription(), link.getExpandedUrl(), link.getDisplayUrl(), link.getTitle()));
                 }
             }
-            return String.join(" ", salida);
-        } else {
-            return texto;
         }
+        return urls;
+    }
+
+    private String limpiarLinks(String texto, List<? extends UrlEntity> links){
+        if(links != null){
+            for (UrlEntity link : links) {
+                if(link.getStatus() == 200){
+                    texto = texto.replace(
+                        link.getUrl(),
+                        "<a href=\"" + link.getExpandedUrl() + "\" target=\"_blank\">" + link.getDisplayUrl() + "</a>");
+                } else {
+                    texto = texto.replace(link.getUrl(), "");
+                }
+            }
+        }
+        return texto;
     }
 }

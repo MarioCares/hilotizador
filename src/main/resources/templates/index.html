@@ -40,6 +40,24 @@
                 <div class="box" th:each="tuit: ${Tuits}">
                     <p th:utext="${#strings.replace(tuit.texto,'&#10;','&lt;br&gt;')}"></p>
                     <div class="columns">
+                        <div class="column" th:each="link: ${tuit.links}">
+                            <div class="card">
+                                <header class="card-header-title" th:text="${link.titulo}"></header>
+                                <div class="card-content">
+                                    <div class="content" th:text="${link.descripcion}"></div>
+                                </div>
+                                <footer class="card-footer">
+                                    <p class="card-footer-item">
+                                        <a th:href="${link.url}" target="_blank">
+                                            <span class="icon"><i class="fas fa-globe-americas"></i></span>
+                                            <span th:text="${link.link}"></span>
+                                        </a>
+                                    </p>
+                                </footer>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="columns">
                         <div class="column" th:each="media: ${tuit.medias}">
                             <figure class="image">
                                 <img th:src="${media}" alt="imagen">
