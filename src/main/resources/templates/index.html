@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Document</title>
+</head>
+<body>
+<section class="section">
+    <div class="container content">
+        <div class="columns">
+            <div class="column is-two-thirds is-offset-one-fifth">
+                <h1 class="title is-2">Hilotizador</h1>
+                <article class="media">
+                    <figure class="media-left">
+                        <p class="image is-128x128">
+                            <img th:src="${Usuario.avatar}">
+                        </p>
+                    </figure>
+                    <div class="media-content">
+                        <div class="content">
+                            <div>
+                                <a th:href="@{https://twitter.com/__${Usuario.nickname}__}" target="_blank">
+                                    <strong th:text="${Usuario.nombre}"></strong>
+                                </a>
+                                <span class="icon"><i class="far fa-comment-alt"></i></span>
+                                <span th:text="${Usuario.tuits}"></span>
+                                <span class="icon"><i class="fas fa-user-friends"></i></span>
+                                <span th:text="${Usuario.seguidores}"></span>
+                                <br>
+                                <p th:utext="${#strings.replace(Usuario.descripcion,'&#10;','&lt;br&gt;')}">
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <div class="box" th:each="tuit: ${Tuits}">
+                    <p th:utext="${#strings.replace(tuit.texto,'&#10;','&lt;br&gt;')}"></p>
+                    <div class="columns">
+                        <div class="column" th:each="media: ${tuit.medias}">
+                            <figure class="image">
+                                <img th:src="${media}" alt="imagen">
+                            </figure>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
